@@ -20,6 +20,9 @@ import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.Map;
 
@@ -65,14 +68,21 @@ public class HttpUtil {
 
     public static String formatUrl(String host, String uri){
         Preconditions.checkArgument(StringUtils.isNotBlank(host));
-        Preconditions.checkArgument(StringUtils.isNotBlank(uri));
-        if(host.charAt(host.length()-1) == '/' && uri.charAt(0) == '/') {
-            return host.substring(0, host.length() - 1) + uri;
+        try {
+            if(StringUtils.isBlank(uri)){
+                return URLEncoder.encode(host, "utf-8");
+            }
+            if(host.charAt(host.length()-1) == '/' && uri.charAt(0) == '/') {
+                return host.substring(0, host.length() - 1) + uri;
+            }
+            if(host.charAt(host.length()-1) != '/' && uri.charAt(0) != '/') {
+                return host + "/" + uri;
+            }
+            return URLEncoder.encode(host + uri, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            logger.error("[formatUrl] e=#{}", e);
+            return "";
         }
-        if(host.charAt(host.length()-1) != '/' && uri.charAt(0) != '/') {
-            return host + "/" + uri;
-        }
-        return host + uri;
     }
 
     /**
@@ -206,8 +216,8 @@ public class HttpUtil {
 //        String url = "http://www.baidu.com";
         String url = "http://localhost:9090/api/sso/user/r/auth";
 //        String url = "http://localhost:8080/";
-        String res = doGet(url);
-        System.out.println(res);
+//        String res = doGet(url);
+//        System.out.println(res);
 //        System.out.println(getHost(url, "/"));
 
 //        String url = "http://localhost:8888";
@@ -219,7 +229,11 @@ public class HttpUtil {
                 .url(url)
                 .build();
 
-        Response response = client.newCall(request).execute();
-        System.out.println(response.body().string());
+//        Response response = client.newCall(request).execute();
+//        System.out.println(response.body().string());
+
+        String encoded = URLEncoder.encode(url, "utf-8");
+        System.out.println(encoded);
+        System.out.println(URLDecoder.decode(encoded, "utf-8"));
     }
 }
